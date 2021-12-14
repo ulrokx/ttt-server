@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendMessage = exports.gameMove = exports.leaveGame = exports.joinGame = void 0;
+exports.playAgain = exports.sendMessage = exports.gameMove = exports.leaveGame = exports.joinGame = void 0;
 const crypto_1 = require("crypto");
 let games = {};
 let users = [];
+let waitingQ = [];
 const joinGame = (arg, s, io) => {
     console.log("joined:", arg.nick);
     if (games.hasOwnProperty(arg.room)) {
@@ -11,7 +12,11 @@ const joinGame = (arg, s, io) => {
             s.join(arg.room);
             games[arg.room].push(arg.nick);
             users.push(s.id);
-            s.emit("game:join:good", { msg: `you, ${arg.nick}, join ${arg.room}, game will start`, position: 1, username: arg.nick });
+            s.emit("game:join:good", {
+                msg: `you, ${arg.nick}, join ${arg.room}, game will start`,
+                position: 1,
+                username: arg.nick,
+            });
             io.in(arg.room).emit("game:users:list", {
                 list: games[arg.room],
                 auth: "true",
@@ -24,7 +29,10 @@ const joinGame = (arg, s, io) => {
             });
         }
         else {
-            s.emit("game:join:good", { msg: `this room, ${arg.room} is full`, position: null });
+            s.emit("game:join:good", {
+                msg: `this room, ${arg.room} is full`,
+                position: null,
+            });
             s.emit("game:users:list", {
                 list: [],
                 auth: "false",
@@ -35,7 +43,11 @@ const joinGame = (arg, s, io) => {
         games[arg.room] = [];
         games[arg.room].push(arg.nick);
         s.join(arg.room);
-        s.emit("game:join:good", { msg: `you, ${arg.nick}, joined room ${arg.room} first member`, position: 0, username: arg.nick });
+        s.emit("game:join:good", {
+            msg: `you, ${arg.nick}, joined room ${arg.room} first member`,
+            position: 0,
+            username: arg.nick,
+        });
         io.in(arg.room).emit("game:users:list", {
             list: games[arg.room],
             auth: "true",
@@ -62,7 +74,7 @@ const leaveGame = (arg, s, io) => {
 };
 exports.leaveGame = leaveGame;
 const gameMove = (arg, s, io) => {
-    s.rooms.forEach(room => {
+    s.rooms.forEach((room) => {
         if (games.hasOwnProperty(room)) {
             s.to(room).emit("servermove", { id: arg.id });
         }
@@ -70,11 +82,24 @@ const gameMove = (arg, s, io) => {
 };
 exports.gameMove = gameMove;
 const sendMessage = (arg, s, io) => {
-    s.rooms.forEach(room => {
+    s.rooms.forEach((room) => {
         if (games.hasOwnProperty(room)) {
             s.to(room).emit("messagerec", { msg: arg.msg, sender: arg.sender });
         }
     });
 };
 exports.sendMessage = sendMessage;
+const playAgain = (arg, s, io) => {
+    s.rooms.forEach((room) => {
+        if (waitingQ.includes(room) && room !== s.id) {
+            const startingPlayer = (0, crypto_1.randomInt)(0, 2);
+            io.in(room).emit("playagain", { first: startingPlayer });
+            return;
+        }
+        else {
+            waitingQ.push(room);
+        }
+    });
+};
+exports.playAgain = playAgain;
 //# sourceMappingURL=game.js.map

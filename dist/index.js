@@ -22,10 +22,11 @@ const main = async () => {
         s.on("game:join", (arg) => (0, game_1.joinGame)(arg, s, io));
         s.on("disconnect", (arg) => (0, game_1.leaveGame)(arg, s, io));
         s.on("clientmove", (arg) => (0, game_1.gameMove)(arg, s, io));
-        s.on("messagesend", arg => (0, game_1.sendMessage)(arg, s, io));
+        s.on("messagesend", (arg) => (0, game_1.sendMessage)(arg, s, io));
+        s.on("game:again", (arg) => (0, game_1.playAgain)(arg, s, io));
     });
     httpServer.listen(port, () => {
-        console.log("server listenging on port 4000");
+        console.log(`server listenging on port ${port}`);
     });
 };
 main();
