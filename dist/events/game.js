@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.playAgain = exports.sendMessage = exports.gameMove = exports.leaveGame = exports.joinGame = void 0;
 const crypto_1 = require("crypto");
+const timers_1 = require("timers");
 let games = {};
 let users = [];
 let waitingQ = [];
@@ -40,6 +41,9 @@ const joinGame = (arg, s, io) => {
         }
     }
     else {
+        (0, timers_1.setTimeout)(() => {
+            delete games[arg.room];
+        }, 1000 * 60 * 10);
         games[arg.room] = [];
         games[arg.room].push(arg.nick);
         s.join(arg.room);
